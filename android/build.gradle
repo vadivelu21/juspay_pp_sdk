@@ -1,0 +1,42 @@
+// android/build.gradle
+buildscript {
+    ext.kotlin_version = '2.1.0'
+    repositories {
+        google()
+        mavenCentral()
+        // Required: Juspay asset download plugin
+//        maven { url "https://maven.juspay.in/jp-build-packages/hypersdk-asset-download/releases/" }
+//        maven { url "https://maven.juspay.in/jp-build-packages/hyper-sdk/" }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // Required: HyperSDK asset plugin
+//        classpath 'in.juspay:hypersdk-asset-plugin:1.0.3'
+//        classpath 'in.juspay:hypersdk.plugin:2.2.12'
+    }
+
+    ext {
+        // ──────────────────────────────────────────────────────────────────
+        // Replace these with values provided by the Juspay team
+        // ──────────────────────────────────────────────────────────────────
+        clientId       = "msprod"
+        hyperSDKVersion = "2.2.5"         // Use version shared by Juspay
+        excludedMicroSDKs = []
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects { project.buildDir = "${rootProject.buildDir}/${project.name}" }
+subprojects { project.evaluationDependsOn(':app') }
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

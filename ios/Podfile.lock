@@ -1,0 +1,56 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_native_splash (2.4.3):
+    - Flutter
+  - hyper_webview_flutter (0.0.5):
+    - Flutter
+  - HyperCore (0.0.10)
+  - HyperSDK (2.2.4):
+    - HyperCore (= 0.0.10)
+    - JuspaySafeBrowser (= 0.1.88)
+  - hypersdkflutter (4.0.43):
+    - Flutter
+    - HyperSDK (= 2.2.4)
+  - JuspaySafeBrowser (0.1.88)
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
+  - hyper_webview_flutter (from `.symlinks/plugins/hyper_webview_flutter/ios`)
+  - hypersdkflutter (from `.symlinks/plugins/hypersdkflutter/ios`)
+  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
+
+SPEC REPOS:
+  trunk:
+    - HyperCore
+    - HyperSDK
+    - JuspaySafeBrowser
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_native_splash:
+    :path: ".symlinks/plugins/flutter_native_splash/ios"
+  hyper_webview_flutter:
+    :path: ".symlinks/plugins/hyper_webview_flutter/ios"
+  hypersdkflutter:
+    :path: ".symlinks/plugins/hypersdkflutter/ios"
+  webview_flutter_wkwebview:
+    :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
+  hyper_webview_flutter: 362424a0d272914f4fbfa9bda7b8748653811ee3
+  HyperCore: c4bd7222c69e3d68db8bb1ca2e40c43fd5f4127f
+  HyperSDK: 891cfc69cf3befad4fd0951297a93801c4a6627d
+  hypersdkflutter: 2b2b615ff9f4288720e6530192bd07b3211cc83c
+  JuspaySafeBrowser: 04ad004fa85e9db766d4e2af45f60ac6b5eeba61
+  webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
+
+PODFILE CHECKSUM: 8150c35dd04d929c62a3c133ef1c918cb0835957
+
+COCOAPODS: 1.16.2

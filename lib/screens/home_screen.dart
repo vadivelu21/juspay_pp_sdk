@@ -159,6 +159,26 @@ const _ecPayloadTemplates = <String, Map<String, dynamic>>{
       'customerId': 'cth_8XSdhGQvbNV59QY4',
     },
   },
+  'Eligibility': {
+    'requestId': '__UUID__',
+    'service': 'in.juspay.ec',
+    'payload': {
+      'action': 'eligibility',
+      'merchantId': 'Testvadivel',
+      'clientAuthToken': '__CLIENT_AUTH_TOKEN__',
+      'environment': 'sandbox',
+      'amount': '10.00',
+      'data': {
+        'wallets': [
+          {
+            'mobile': '9999999999',
+            'customerId': 'cth_8XSdhGQvbNV59QY4',
+            'checkType': ['LAZYPAY', 'SNAPMINT'],
+          }
+        ],
+      },
+    },
+  },
   'Custom (Edit below)': <String, dynamic>{},
 };
 
@@ -701,11 +721,21 @@ class _HomeScreenState extends State<HomeScreen>
     }
     setState(() => _ecFetchingToken = true);
 
-    const url = 'https://sandbox.juspay.in/orders';
+    final inputUrl = _sessionUrlCtrl.text.trim();
+    final uri = Uri.parse(inputUrl);
+
+    final baseUrl = uri.hasPort
+        ? '${uri.scheme}://${uri.host}:${uri.port}'
+        : '${uri.scheme}://${uri.host}';
+
+    final url = '$baseUrl/orders';
+
+    // const url = 'https://sandbox.juspay.in/orders';
     final headers = <String, String>{
       'Content-Type': 'application/x-www-form-urlencoded',
       'Authorization': 'Basic ${base64Encode(utf8.encode('$apiKey:'))}',
       'x-merchantid': 'Testvadivel',
+      'version': '2026-03-31'
     };
 
     final reqBody = <String, String>{
@@ -879,6 +909,15 @@ class _HomeScreenState extends State<HomeScreen>
     if (p.containsKey('customerMobile'))
       p['customerMobile'] = _ecCustomerMobileCtrl.text.trim();
     if (p.containsKey('currency')) p['currency'] = _ecCurrencyCtrl.text.trim();
+    if (templateName == 'Eligibility') {
+      final data = p['data'] as Map<String, dynamic>?;
+      final wallets = data?['wallets'] as List?;
+      if (wallets != null && wallets.isNotEmpty) {
+        final wallet = wallets[0] as Map<String, dynamic>;
+        wallet['mobile'] = _ecCustomerMobileCtrl.text.trim();
+        wallet['customerId'] = _ecCustomerIdCtrl.text.trim();
+      }
+    }
     setState(() => _ecPayloadCtrl.text = _enc.convert(filled));
   }
 

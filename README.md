@@ -52,6 +52,22 @@ flutter pub get
 flutter run
 ```
 
+```
+By default, when you open the app, the asset loaded in the Payment Page (PP) will be from msprod.
+
+To load the PP with your own testing client ID, follow these steps:
+
+1. Open the app.
+2. Initiate the flow using your respective client ID.
+3. Trigger a process call with the same client ID.
+        - At this point, the PP will still open with the msprod UI.
+4. Kill the app completely.
+5. Reopen the app.
+6. Initiate again using the same client ID as in Step 2.
+7. Trigger a process call.
+        - Now, the PP will load with the UI corresponding to your client ID.
+```
+
 ---
 
 ## Integration Flow

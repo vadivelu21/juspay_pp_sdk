@@ -1,1 +1,1 @@
-clientId = YOUR_CLIENT_ID
+clientId = msprod

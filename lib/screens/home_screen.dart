@@ -40,6 +40,7 @@ Map<String, dynamic> _buildInitiatePayload() => {
         'customerEmail': 'test@example.com',
         'customerMobile': '9999999999',
         'environment': 'sandbox',
+        'logLevel': '1', // Enable clickstream events
       },
     };
 
@@ -344,10 +345,15 @@ class _HomeScreenState extends State<HomeScreen>
   String? _webviewOrderId;
   String? _webviewExpiry;
 
+  // IFrame Checkout
+  bool _iframeInitiated = false;
+  bool _iframeInitiating = false;
+  bool _iframeProcessing = false;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _sessionUrlCtrl = TextEditingController(text: _defaultSessionUrl);
     _apiKeyCtrl = TextEditingController();
     _initiateJsonCtrl =
@@ -1065,6 +1071,7 @@ class _HomeScreenState extends State<HomeScreen>
                     },
                   ),
                   _buildEcSdkTab(),
+                  _buildIframeTab(),
                   LogPanel(logs: _logs, onClear: _clearLogs),
                 ],
               ),
@@ -1262,6 +1269,7 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
+          const Tab(text: 'IFRAME'),
           const Tab(text: 'LOGS'),
         ],
       ),
@@ -2364,6 +2372,256 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ],
     );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // IFrame Checkout Tab
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildIframeTab() {
+    return ListView(
+      padding: const EdgeInsets.all(14),
+      children: [
+        // Info banner
+        Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF9C27B0).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: const Color(0xFF9C27B0).withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline_rounded,
+                  color: Color(0xFFCE93D8), size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('IFrame Checkout with Clickstream Events',
+                        style: TextStyle(
+                            color: Color(0xFFCE93D8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700)),
+                    SizedBox(height: 4),
+                    Text(
+                      'This section uses values from the PP-SIG tab with clickstream event logging enabled.',
+                      style: TextStyle(color: Color(0xFF9C7BA8), fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Step 1: IFrame Initiate
+        _StepShell(
+          number: '01',
+          title: 'IFrame Initiate',
+          subtitle: 'Uses payload from PP tab with clickstream enabled',
+          accent: const Color(0xFF9C27B0),
+          done: _iframeInitiated,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Uses the initiate payload from the PP (Integration) tab with clickstream events enabled (logLevel: 1).',
+                style: TextStyle(color: Color(0xFF6A8AAA), fontSize: 11),
+              ),
+              const SizedBox(height: 10),
+              _ActionButton(
+                label: 'INITIATE (FROM PP TAB)',
+                icon: Icons.play_arrow_rounded,
+                color: const Color(0xFF9C27B0),
+                loading: _iframeInitiating,
+                onPressed: _initiateIframe,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Step 2: IFrame Process
+        _StepShell(
+          number: '02',
+          title: 'IFrame Process',
+          subtitle: 'Uses sdk_payload from Session API response',
+          accent: const Color(0xFF7B1FA2),
+          done: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_extractedSdkPayload == null) ...[
+                const Text(
+                  'Complete Step 2 (Session API) in the PP tab first to get sdk_payload.',
+                  style: TextStyle(color: Color(0xFF6A8AAA), fontSize: 11),
+                ),
+              ] else if (!_iframeInitiated) ...[
+                const Text(
+                  'Complete IFrame Initiate first, then you can process.',
+                  style: TextStyle(color: Color(0xFF6A8AAA), fontSize: 11),
+                ),
+              ] else ...[
+                const Text(
+                  'Uses sdk_payload from Session API response (from PP tab).',
+                  style: TextStyle(color: Color(0xFF6A8AAA), fontSize: 11),
+                ),
+                const SizedBox(height: 10),
+                _ActionButton(
+                  label: 'PROCESS PAYMENT (FROM PP TAB)',
+                  icon: Icons.payment_rounded,
+                  color: const Color(0xFF7B1FA2),
+                  loading: _iframeProcessing,
+                  onPressed: (_iframeInitiated && _extractedSdkPayload != null)
+                      ? _processIframe
+                      : null,
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  // ─── IFrame Checkout Methods ───────────────────────────────────────────────
+
+  Future<void> _initiateIframe() async {
+    Map<String, dynamic> payload;
+    try {
+      // Read initiate payload from PP (Integration) tab
+      payload = jsonDecode(_initiateJsonCtrl.text);
+
+      // Ensure logLevel is added for clickstream events
+      if (payload['payload'] is Map<String, dynamic>) {
+        payload['payload']['logLevel'] = '1';
+      }
+
+      // Regenerate requestId to ensure uniqueness
+      payload['requestId'] = _generateUuidV4();
+
+    } catch (e) {
+      _log(LogEntry(
+          title: '[IFRAME] Initiate — Invalid JSON in PP tab',
+          body: e.toString(),
+          type: LogType.error));
+      return;
+    }
+    setState(() => _iframeInitiating = true);
+    _log(LogEntry(
+        title: '[IFRAME] ▲ Initiate — Payload (from PP tab)',
+        body: _enc.convert(payload),
+        type: LogType.request));
+    try {
+      await hyperSDK.initiate(payload, _iframeInitiateCallback);
+      _log(LogEntry(
+          title: '[IFRAME] Initiate — Called',
+          body: 'Awaiting callback...',
+          type: LogType.info));
+    } catch (e) {
+      _log(LogEntry(
+          title: '[IFRAME] Initiate — Exception',
+          body: e.toString(),
+          type: LogType.error));
+    } finally {
+      setState(() => _iframeInitiating = false);
+    }
+  }
+
+  void _iframeInitiateCallback(MethodCall methodCall) {
+    if (methodCall.method == 'initiate_result') {
+      Map<String, dynamic> result = {};
+      try {
+        result = methodCall.arguments is String
+            ? jsonDecode(methodCall.arguments)
+            : Map<String, dynamic>.from(methodCall.arguments ?? {});
+      } catch (_) {}
+      final error = result['error'] ?? false;
+      setState(() {
+        _iframeInitiated = !error;
+        _isInitiated = !error; // Update main SDK state for status bar
+      });
+      _log(LogEntry(
+        title: error
+            ? '[IFRAME] ✕ Initiate — Failed'
+            : '[IFRAME] ✓ Initiate — Success',
+        body: _enc.convert(result),
+        type: error ? LogType.error : LogType.success,
+      ));
+
+      if (!error) {
+        _log(LogEntry(
+          title: '[IFRAME] Ready for Process',
+          body: 'Now complete Session API in PP tab, then click PROCESS PAYMENT here',
+          type: LogType.info,
+        ));
+      }
+    } else {
+      _log(LogEntry(
+          title: '[IFRAME] Initiate ← ${methodCall.method}',
+          body: methodCall.arguments?.toString() ?? '',
+          type: LogType.info));
+    }
+  }
+
+  Future<void> _processIframe() async {
+    if (!_iframeInitiated) {
+      _log(LogEntry(
+          title: '[IFRAME] Process — Blocked',
+          body: 'Complete IFrame Initiate first.',
+          type: LogType.error));
+      return;
+    }
+    if (_extractedSdkPayload == null) {
+      _log(LogEntry(
+          title: '[IFRAME] Process — Blocked',
+          body: 'Complete Session API in PP tab first to get sdk_payload.',
+          type: LogType.error));
+      return;
+    }
+
+    Map<String, dynamic> processPayload;
+    try {
+      // Use the sdk_payload from Session API response (from PP tab)
+      processPayload = jsonDecode(_extractedSdkPayload!);
+    } catch (e) {
+      _log(LogEntry(
+          title: '[IFRAME] Process — Invalid sdk_payload',
+          body: e.toString(),
+          type: LogType.error));
+      return;
+    }
+
+    setState(() => _iframeProcessing = true);
+    _log(LogEntry(
+        title: '[IFRAME] ▲ Process — Payload (sdk_payload from PP tab)',
+        body: _enc.convert(processPayload),
+        type: LogType.request));
+    try {
+      // Call hyperSDK.process() to open checkout
+      // ignore: unawaited_futures
+      hyperSDK.process(processPayload, _iframeProcessCallback);
+      _log(LogEntry(
+          title: '[IFRAME] Process — Called',
+          body: 'hyperSDK.process() invoked. Checkout will open...',
+          type: LogType.info));
+    } catch (e) {
+      _log(LogEntry(
+          title: '[IFRAME] Process — Exception',
+          body: e.toString(),
+          type: LogType.error));
+    } finally {
+      setState(() => _iframeProcessing = false);
+    }
+  }
+
+  void _iframeProcessCallback(MethodCall methodCall) {
+    _handleProcessMethodCall(methodCall, tag: 'IFRAME');
   }
 }
 

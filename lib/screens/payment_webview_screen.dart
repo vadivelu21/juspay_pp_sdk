@@ -7,12 +7,14 @@ class PaymentWebviewScreen extends StatefulWidget {
   final String url;
   final String orderId;
   final void Function(LogEntry) onLog;
+  final bool embedded;
 
   const PaymentWebviewScreen({
     super.key,
     required this.url,
     required this.orderId,
     required this.onLog,
+    this.embedded = false,
   });
 
   @override
@@ -139,6 +141,12 @@ class _PaymentWebviewScreenState extends State<PaymentWebviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // If embedded mode, return just the WebView without Scaffold
+    if (widget.embedded) {
+      return WebViewWidget(controller: _controller);
+    }
+
+    // Full-screen mode with Scaffold
     return Scaffold(
       backgroundColor: const Color(0xFF08111E),
       appBar: AppBar(

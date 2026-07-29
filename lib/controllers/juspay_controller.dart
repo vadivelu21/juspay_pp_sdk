@@ -127,7 +127,11 @@ class JuspayController {
         ));
       }
 
-      return {'success': success, 'statusCode': response.statusCode, 'body': body};
+      return {
+        'success': success,
+        'statusCode': response.statusCode,
+        'body': body
+      };
     } catch (e) {
       addLog(LogEntry(
         title: 'Session API — Error',
@@ -211,7 +215,8 @@ class JuspayController {
   LogType _statusToLogType(bool error, String status) {
     if (status == 'charged') return LogType.success;
     if (error) return LogType.error;
-    if (status == 'backpressed' || status == 'user_aborted') return LogType.info;
+    if (status == 'backpressed' || status == 'user_aborted')
+      return LogType.info;
     return LogType.response;
   }
 

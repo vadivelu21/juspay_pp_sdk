@@ -1320,6 +1320,8 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(height: 8),
             _field('API Key', _apiKeyCtrl,
                 hint: 'Your Juspay API key', obscure: true),
+            const SizedBox(height: 8),
+            _buildTestApiKeysSection(),
             const SizedBox(height: 10),
             _rowLabel('Request Payload', _refreshOrderId, 'New order_id',
                 const Color(0xFFFFB74D)),
@@ -1373,6 +1375,103 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         const SizedBox(height: 24),
       ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Test API Keys Section
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildTestApiKeysSection() {
+    final testKeys = {
+      'Testvadivel-sbx': '6A7BD978C7E4277A7385100EDE6459',
+      'vadivel_prod_switch': '7DBED31FE444C7CB84289204B73662',
+      'merchant_success-sbx': 'E131F3B1D624F4F9C4E31040357202',
+      'msprod': '55C03FB362646949EB48AB6EB48E72',
+      'offer_sandbox': '58ACC0D613243BBB8E195EC0019858',
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFB74D).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFFFB74D).withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.science_rounded,
+                  color: Color(0xFFFFB74D), size: 13),
+              const SizedBox(width: 6),
+              const Text(
+                'Test API Keys',
+                style: TextStyle(
+                  color: Color(0xFFFFB74D),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: testKeys.entries.map((entry) {
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _apiKeyCtrl.text = entry.value;
+                    // Update payment_page_client_id in session JSON
+                    try {
+                      final currentSession = jsonDecode(_sessionJsonCtrl.text);
+                      currentSession['payment_page_client_id'] = entry.key;
+                      _sessionJsonCtrl.text = _enc.convert(currentSession);
+                    } catch (_) {
+                      // If parsing fails, just update API key
+                    }
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Applied: ${entry.key}'),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A1828),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: const Color(0xFFFFB74D).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.key_rounded,
+                          color: Color(0xFFFFB74D), size: 10),
+                      const SizedBox(width: 4),
+                      Text(
+                        entry.key,
+                        style: const TextStyle(
+                          color: Color(0xFFFFB74D),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 

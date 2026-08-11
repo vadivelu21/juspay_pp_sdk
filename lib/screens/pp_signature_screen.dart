@@ -185,6 +185,8 @@ class _PpSignatureScreenState extends State<PpSignatureScreen> {
   bool _mandateBlockFunds = false;
   // Metadata
   final _gatewayRefIdCtrl = TextEditingController(text: '');
+  // Product summary
+  final _productSummaryCtrl = TextEditingController(text: '');
   // Bank account details
   final _bankAccNumberCtrl = TextEditingController(text: '');
   final _bankIfscCtrl = TextEditingController(text: '');
@@ -244,6 +246,7 @@ class _PpSignatureScreenState extends State<PpSignatureScreen> {
     'mandate.end_date': false,
     'mandate.frequency': false,
     'metadata.gateway_ref_id': false,
+    'product_summary': false,
     'udf1': false,
     'udf2': false,
     'udf3': false,
@@ -462,6 +465,7 @@ class _PpSignatureScreenState extends State<PpSignatureScreen> {
     _mandateEndDateCtrl.dispose();
     _mandateFrequencyCtrl.dispose();
     _gatewayRefIdCtrl.dispose();
+    _productSummaryCtrl.dispose();
     _bankAccNumberCtrl.dispose();
     _bankIfscCtrl.dispose();
     _bankCodeCtrl.dispose();
@@ -701,6 +705,14 @@ class _PpSignatureScreenState extends State<PpSignatureScreen> {
         'signature': signature,
         'merchantKeyId': _merchantKeyIdCtrl.text.trim(),
       };
+
+      // Add optional fields to payload (not part of signature)
+      if (_optionalEnabled['language'] == true && orderDetails.containsKey('language')) {
+        payload['language'] = orderDetails['language'];
+      }
+      if (_optionalEnabled['product_summary'] == true && _productSummaryCtrl.text.trim().isNotEmpty) {
+        payload['product_summary'] = _productSummaryCtrl.text.trim();
+      }
       final processPayload = {
         'requestId': _generateUuidV4(),
         'service': 'in.juspay.hyperpay',
@@ -1007,6 +1019,12 @@ class _PpSignatureScreenState extends State<PpSignatureScreen> {
         _optionalField('metadata.gateway_ref_id',
             'metadata.JUSPAY:gateway_reference_id', _gatewayRefIdCtrl),
         const SizedBox(height: 6),
+        _sectionLabel('PRODUCT SUMMARY'),
+        const SizedBox(height: 8),
+        _optionalField('product_summary', 'product_summary (JSON string)',
+            _productSummaryCtrl,
+            hint: 'JSON string for product/booking summary'),
+        const SizedBox(height: 6),
         _sectionLabel('BANK ACCOUNT DETAILS (TPV)'),
         const SizedBox(height: 8),
         _toggleRow(
@@ -1140,6 +1158,65 @@ class _PpSignatureScreenState extends State<PpSignatureScreen> {
         const SizedBox(height: 8),
         _formField('merchantKeyId', _merchantKeyIdCtrl,
             hint: 'Testvadivel - 154459'),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _privateKeyCtrl.text = '''-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAv5D6CNi7tBavPuUir3O5CggTQRLF4rOsM2tpPprsjBLPmAK8
+3VnSzhTt9iNEs2PL2SROoFZhON3akI9Q6fEv8VuMUAD5oxpHV4VVKpWrp/mJ3WHK
+MW+C2csf/Z1qnotfUZV60hsPnb9LqCKW6t/gAdBohJstURex6B9NlhNjI3FYej/K
+HjlBQ5KORVUa4Fy3vPp0akXBLgRzOqoiNxMcJMgBjzwsurlvMzxb3ZLy9XB8ADjw
+AovD2jmMxxC8X3UXb367PkhwyrdsRR9F8l9h2/nKr4Lx9HY1gSR8vt+at3amBNhO
+ZIYRSak2uOZHP7FI0lrr/WtMgO+K+1yewlAIFQIDAQABAoIBAQCTt8+WksnrDLMF
+5NriQHInciKmwzsknTfkTqdRR1WwjbDWnwXUCjesAiec7YVEb2f5gS3AJdvCZhDr
++BeEzh8SFm4UIyxcwR7SNlZ+B/veA2Zz97xacoqMNz3r6z8UEpTl7EZRTdy035YP
+iNynMQsjWvm9h4tiRMtDGyBQ4ZJI+QCYJ+3ASUJOoeW6mKg5F6V2sW4Xbt7UoQLE
+nRATPdkPuDMjwkT4VNomvnuLdH5lhFyDVfp7W32LtZNcz+WhFFmPEdd7UDwJv1fS
+6cBVQNz4s5EyVwEeOcK6V2bedLnto6KiazV16ScQK3SQ7rnjboJh01fNX+voM4HL
+41qucfjhAoGBAOCgOFqVa+5mMie3ICkMkEAgOnibGZnkZRFQh9PoMVzuZEncBL0l
+oiz/lsv4G8CjMkvpxvo2YkF3kc0Y1G5YyfWHMe7UODgo6UqFtXoe21vqW0A5QKpy
+bZGbD33PvYCoIfZKfdPZRSU+LAKe4Vy3U2ZJ3PIsHBly7D8xJp64267HAoGBANpS
+q8cHKnA0sBehI/M8o5WRsSrlRjhfJHiztYLzBVjbcZp2CTun7Q8UrpZzoQzTLmnB
+0K3wXJuD6TPGNc7u1FVl6XpIjNcy1D5EKsMzB0Y1nlQgtVq7KQPsbwmaaqP/Nsb1
+fbyN73DCaKIQ1//g9B/OXqQu9yGBrQHLE4+HYmZDAoGBALGWWhdbjMIk78Awam+p
+rB3WnQOe88WUKUdgGJKzPtuO6aDvHpv/tdDHnQvTMvXA0FHuGE7XUiUaCB5TZBd9
+gOXppdOA2pWj2pT9UvWikaCAjvYejX50CyYTplK8O8EMrBUQ3ZvwaVdBaQAFZnyr
+v3beLJ0VvH1uO1LWZAcWdTAfAoGBAIZ3tr9uJXBYs0DKiibtaV/dDT77WgWsa/0/
+yoMuBVQWTOEy5DrvEe5g8atO6pnIlGSk8E/BpHhQhdjSsx+SMAutKmGbv8tnzhvP
+xnrVuhw/OBZe0vRgJEH7ZOSITDhYH7fpShlRXnGX+/Qd5bv/JL1WUSpUlvf3M8TP
+/GtBmpSbAoGAdi9Z88pype3TFLP7b+qPzeX8v7tta5DKstTnfmmEincxC7N51OPG
+8uM14lS1ORF3QUgAA1CGjvuvLeknZAASwQ86OP9bfzqMH1b6xTgOOxeCFHQMKNlT
+gpartfQzOewcy6navx/8yCN2jNFz34I+mI1Px6Jb6aN0GlDa0T0Ia5Y=
+-----END RSA PRIVATE KEY-----''';
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFCE93D8).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+              border:
+                  Border.all(color: const Color(0xFFCE93D8).withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.key_rounded,
+                    color: Color(0xFFCE93D8), size: 14),
+                const SizedBox(width: 6),
+                const Text(
+                  'Add Testvadivel RSA Private Key',
+                  style: TextStyle(
+                    color: Color(0xFFCE93D8),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: _privateKeyCtrl,

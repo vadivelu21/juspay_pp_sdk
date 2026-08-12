@@ -27,7 +27,7 @@ String _generateUuidV4() {
       '-${h(b[10])}${h(b[11])}${h(b[12])}${h(b[13])}${h(b[14])}${h(b[15])}';
 }
 
-String _generateOrderId() => 't${DateTime.now().millisecondsSinceEpoch}';
+String _generateOrderId() => "t${DateTime.now().millisecondsSinceEpoch}";
 
 Map<String, dynamic> _buildInitiatePayload() => {
       'requestId': _generateUuidV4(),
@@ -180,6 +180,19 @@ const _ecPayloadTemplates = <String, Map<String, dynamic>>{
       },
     },
   },
+  'UPI_PAY': {
+    'requestId': '__UUID__',
+    'service': 'in.juspay.hyperapi',
+    'payload': {
+      'action': 'upiTxn',
+      'orderId': '__ORDER_ID__',
+      'upiSdkPresent': true,
+      'payWithApp': 'com.phonepe.app',
+      'displayNote': 'UPI Intent',
+      'clientAuthToken': '__CLIENT_AUTH_TOKEN__',
+      'showLoader': true,
+    },
+  },
   'Custom (Edit below)': <String, dynamic>{},
 };
 
@@ -239,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   // EC Create Order form
   final _ecOrderIdCtrl =
-      TextEditingController(text: 't\${DateTime.now().millisecondsSinceEpoch}');
+      TextEditingController(text: "t${DateTime.now().millisecondsSinceEpoch}");
   final _ecAmountCtrl = TextEditingController(text: '10.00');
   final _ecCustomerIdCtrl = TextEditingController(text: 'cth_8XSdhGQvbNV59QY4');
   final _ecCustomerEmailCtrl = TextEditingController(text: 'test@example.com');
@@ -713,7 +726,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ─── EC SDK: Create Order API ───────────────────────────────────────────────
   void _ecRefreshOrderId() {
     setState(() =>
-        _ecOrderIdCtrl.text = 't${DateTime.now().millisecondsSinceEpoch}');
+        _ecOrderIdCtrl.text = "t${DateTime.now().millisecondsSinceEpoch}");
   }
 
   Future<void> _createEcOrder() async {
@@ -1424,14 +1437,6 @@ class _HomeScreenState extends State<HomeScreen>
                 onTap: () {
                   setState(() {
                     _apiKeyCtrl.text = entry.value;
-                    // Update payment_page_client_id in session JSON
-                    try {
-                      final currentSession = jsonDecode(_sessionJsonCtrl.text);
-                      currentSession['payment_page_client_id'] = entry.key;
-                      _sessionJsonCtrl.text = _enc.convert(currentSession);
-                    } catch (_) {
-                      // If parsing fails, just update API key
-                    }
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
